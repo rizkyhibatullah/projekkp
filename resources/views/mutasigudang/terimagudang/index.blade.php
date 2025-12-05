@@ -66,7 +66,19 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="7" class="text-center">Belum ada data penerimaan gudang.</td>
+                                <td colspan="7" class="text-center py-5">
+                                    <div class="d-flex flex-column align-items-center justify-content-center">
+                                        <img src="{{ asset('img/svg/undraw_editable_dywm.svg') }}" alt="Tidak ada data" style="height: 150px; width: auto; opacity: 0.8;" class="mb-4">
+                                        <h5 class="font-weight-bold text-gray-800 mb-2">Belum ada Data Penerimaan</h5>
+                                        <p class="text-gray-500 mb-3">
+                                            Belum ada barang yang diterima dari transfer gudang.<br>
+                                            Silakan proses penerimaan baru.
+                                        </p>
+                                        <a href="{{ route('terimagudang.create') }}" class="btn btn-primary btn-sm">
+                                            <i class="fas fa-plus"></i> Buat Penerimaan Baru
+                                        </a>
+                                    </div>
+                                </td>
                             </tr>
                         @endforelse
                     </tbody>
@@ -169,7 +181,15 @@
                                         </tr>
                                         @endforeach
                                     @else
-                                    <tr><td colspan="8" class="text-center">Pilih nomor transfer untuk memuat data barang.</td></tr>
+                                    <tr>
+                                        <td colspan="8" class="text-center py-5">
+                                            <div class="d-flex flex-column align-items-center justify-content-center">
+                                                <i class="fas fa-dolly-flatbed fa-4x text-gray-300 mb-3"></i>
+                                                <h6 class="font-weight-bold text-gray-600">Belum ada barang dimuat</h6>
+                                                <p class="text-gray-500 mb-0 small">Silakan pilih <strong>Nomor Transfer</strong> di bagian atas untuk memuat daftar barang.</p>
+                                            </div>
+                                        </td>
+                                    </tr>
                                     @endif
                                 </tbody>
                             </table>

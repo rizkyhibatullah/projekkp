@@ -25,13 +25,11 @@ class TransferGudangController extends Controller
         $accessibleWarehouses = $user->warehouse_access ?? [];
         
         $query = TransferHeader::with('gudangPengirim', 'gudangPenerima');
-
+        $query->where('trx_posting', 'F');
         if (!$isSuperAdmin) {
-            $query->where(function ($q) use ($accessibleWarehouses) {
-                $q->whereIn('Trx_WareCode', $accessibleWarehouses)
-                  ->orWhereIn('Trx_RcvNo', $accessibleWarehouses);
-            });
+            $query->whereIn('Trx_WareCode', $accessibleWarehouses);
         }
+
         $transfers = $query->orderBy('Trx_Auto', 'desc')->paginate(15); 
         return view('mutasigudang.transfergudang.index', compact('transfers'));
     }
@@ -63,23 +61,31 @@ class TransferGudangController extends Controller
     public function edit($id)
     {
         $user = Auth::user();
-        
-        $warehouses = Warehouse::all();
-        
         $isSuperAdmin = ($user->role_id == 1);
         $accessibleWarehouses = $user->warehouse_access ?? [];
 
         $transfer = TransferHeader::with('details.produk')->findOrFail($id);
-        
+        $warehouses = Warehouse::all();
         $permintaanQuery = GudangOrder::with('gudangPengirim', 'gudangPenerima')
-                                    ->where('pur_status', 'submitted'); 
+            ->where('pur_status', 'submitted')
+            ->where(function($q) use ($transfer) {
+                $q->whereNotExists(function ($sub) {
+                    $sub->select(DB::raw(1))
+                          ->from('th_slsgt')
+                          ->whereRaw('th_slsgt.ref_pur_auto = th_gudangorder.Pur_Auto');
+                })
+
+                ->orWhere(function($subQ) use ($transfer) {
+                    if ($transfer->ref_pur_auto) {
+                        $subQ->where('Pur_Auto', $transfer->ref_pur_auto);
+                    }
+                });
+            });
 
         if (!$isSuperAdmin) {
-            $permintaanQuery->where(function ($q) use ($accessibleWarehouses) {
-                $q->whereIn('pur_warehouse', $accessibleWarehouses) 
-                ->orWhereIn('pur_destination', $accessibleWarehouses);
-            });
+            $permintaanQuery->whereIn('pur_warehouse', $accessibleWarehouses);
         }
+
         $permintaanGudang = $permintaanQuery->orderBy('Pur_Auto', 'desc')->get();
         
         return view('mutasigudang.transfergudang.index', compact('transfer', 'warehouses', 'permintaanGudang'));

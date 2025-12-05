@@ -61,7 +61,20 @@
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="10" class="text-center">Belum ada data permintaan.</td>
+                            <tr>
+                                <td colspan="10" class="text-center py-5">
+                                    <div class="d-flex flex-column align-items-center justify-content-center">
+                                        <img src="{{ asset('img/svg/undraw_editable_dywm.svg') }}" alt="Tidak ada data" style="height: 150px; width: auto; opacity: 0.8;" class="mb-4">
+                                        <h5 class="font-weight-bold text-gray-800 mb-2">Belum ada Permintaan Gudang</h5>
+                                        <p class="text-gray-500 mb-3">
+                                            Saat ini belum ada data permintaan (Order) yang tersedia.
+                                        </p>
+                                        <a href="{{ route('gudangorder.create') }}" class="btn btn-success btn-sm">
+                                            <i class="fas fa-plus"></i> Buat Permintaan Baru
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
                         </tr>
                         @endforelse
                     </tbody>
@@ -108,8 +121,10 @@
                         <label for="pur_destination">Lokasi Tujuan</label>
                         <select name="to_warehouse_id" id="to_warehouse_id" class="form-control" required>
                             <option value="">Pilih Gudang Penerima</option>
-                            @foreach($warehouses as $warehouse)
-                                <option value="{{ $warehouse->WARE_Auto }}">{{ $warehouse->WARE_Name }}</option>
+                            @foreach($allWarehouses as $warehouse) 
+                                <option value="{{ $warehouse->WARE_Auto }}" {{ (isset($order) && $order->pur_destination == $warehouse->WARE_Auto) ? 'selected' : '' }}>
+                                    {{ $warehouse->WARE_Name }}
+                                </option>
                             @endforeach
                         </select>
                     </div>
@@ -179,7 +194,18 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="9" class="text-center font-italic">Belum ada barang yang ditambahkan.</td>
+                        <td colspan="9" class="text-center py-5">
+                            <div class="d-flex flex-column align-items-center justify-content-center">
+                                <i class="fas fa-shopping-basket fa-4x text-gray-300 mb-3"></i>
+                                <h6 class="font-weight-bold text-gray-600">Keranjang Kosong</h6>
+                                @if($order->pur_status === 'draft')
+                                    <p class="text-gray-500 mb-2 small">Tambahkan barang yang ingin diminta ke dalam list ini.</p>
+                                    <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#detailModal">
+                                        <i class="fas fa-plus"></i> Tambah Barang
+                                    </button>
+                                @endif
+                            </div>
+                        </td>
                     </tr>
                     @endforelse
                 </tbody>
@@ -283,10 +309,25 @@ $(document).ready(function() {
 
     @if(isset($order))
     
-
     const orderId = '{{ $order->Pur_Auto }}';
     const baseUrl = `{{ url('/mutasigudang/gudangorder') }}`;
     let availableProducts = []; 
+
+    function filterDestinationOptions() {
+        const sourceId = $('#from_warehouse_id').val();
+        const $destSelect = $('#to_warehouse_id');
+        const currentDestId = $destSelect.val();
+
+        $destSelect.find('option').prop('disabled', false).show();
+
+        if (sourceId) {
+            const $targetOption = $destSelect.find('option[value="' + sourceId + '"]');
+            $targetOption.prop('disabled', true).hide();
+            if (currentDestId == sourceId) {
+                $destSelect.val('').trigger('change');
+            }
+        }
+    }
 
     function calculateNetPrice() {
         const qty = parseFloat($('#Pur_Qty').val()) || 0;
@@ -302,16 +343,11 @@ $(document).ready(function() {
             $('#Pur_NettPrice').val('');
         }
     }
-    $('#detailModal').on('keyup change', '.detail-calc', function() {
-        calculateNetPrice();
-    });
-    $('#detailModal').on('hidden.bs.modal', function () {
-        $('#detailForm')[0].reset();
-        $('#Pur_NettPrice').val('');
-        $('#Pur_ProdCode').empty().append('<option value="">Pilih Gudang Pengirim dulu</option>');
-    });
+
+    filterDestinationOptions();
 
     $('#from_warehouse_id').on('change', function() {
+        filterDestinationOptions();
         var warehouseId = $(this).val();
         var productDropdown = $('#Pur_ProdCode'); 
 
@@ -351,6 +387,16 @@ $(document).ready(function() {
                 availableProducts = []; 
             }
         });
+    });
+
+    $('#detailModal').on('keyup change', '.detail-calc', function() {
+        calculateNetPrice();
+    });
+
+    $('#detailModal').on('hidden.bs.modal', function () {
+        $('#detailForm')[0].reset();
+        $('#Pur_NettPrice').val('');
+        $('#Pur_ProdCode').empty().append('<option value="">Pilih Gudang Pengirim dulu</option>');
     });
 
     $('button[data-bs-target="#detailModal"]').on('click', function() {

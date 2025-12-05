@@ -933,3 +933,113 @@
 #59 /Users/bgs_indrlsma/Laravel/Clone/ProjectKP/server.php(21): require_once('/Users/bgs_indr...')
 #60 {main}
 "} 
+[2025-12-05 19:56:37] local.INFO: Getting transfer details for ID: 29  
+[2025-12-05 19:56:37] local.INFO: Transfer found: GT-051225001  
+[2025-12-05 19:56:37] local.INFO: Gudang Pengirim ID: 1  
+[2025-12-05 19:56:37] local.INFO: Gudang Penerima ID: 2  
+[2025-12-05 19:56:37] local.INFO: Gudang Pengirim Object: Exists  
+[2025-12-05 19:56:37] local.INFO: Gudang Penerima Object: Exists  
+[2025-12-05 19:56:37] local.INFO: Gudang Pengirim Name: Gudang Utama  
+[2025-12-05 19:56:37] local.INFO: Gudang Penerima Name: Gudang Cabang  
+[2025-12-05 19:56:43] local.INFO: Adding stock: Product 31231, Warehouse 2, Qty 12.00  
+[2025-12-05 19:56:43] local.INFO: New stock created: 31231 in warehouse 2 with qty 12.00  
+[2025-12-05 19:59:05] local.INFO: Getting transfer details for ID: 30  
+[2025-12-05 19:59:05] local.INFO: Transfer found: GT-051225002  
+[2025-12-05 19:59:05] local.INFO: Gudang Pengirim ID: 1  
+[2025-12-05 19:59:05] local.INFO: Gudang Penerima ID: 2  
+[2025-12-05 19:59:05] local.INFO: Gudang Pengirim Object: Exists  
+[2025-12-05 19:59:05] local.INFO: Gudang Penerima Object: Exists  
+[2025-12-05 19:59:05] local.INFO: Gudang Pengirim Name: Gudang Utama  
+[2025-12-05 19:59:05] local.INFO: Gudang Penerima Name: Gudang Cabang  
+[2025-12-05 20:03:21] local.INFO: Adding stock: Product 31231, Warehouse 2, Qty 40.00  
+[2025-12-05 20:03:21] local.INFO: Stock updated: 31231 in warehouse 2 from 12 to 52  
+[2025-12-05 20:45:03] local.INFO: Getting transfer details for ID: 32  
+[2025-12-05 20:45:03] local.INFO: Transfer found: GT-051225004  
+[2025-12-05 20:45:03] local.INFO: Gudang Pengirim ID: 1  
+[2025-12-05 20:45:03] local.INFO: Gudang Penerima ID: 2  
+[2025-12-05 20:45:03] local.INFO: Gudang Pengirim Object: Exists  
+[2025-12-05 20:45:03] local.INFO: Gudang Penerima Object: Exists  
+[2025-12-05 20:45:03] local.INFO: Gudang Pengirim Name: Gudang Utama  
+[2025-12-05 20:45:03] local.INFO: Gudang Penerima Name: Gudang Cabang  
+[2025-12-05 20:45:08] local.INFO: Adding stock: Product 31231, Warehouse 2, Qty 100.00  
+[2025-12-05 20:45:08] local.INFO: Stock updated: 31231 in warehouse 2 from 52 to 152  
+[2025-12-05 20:59:36] local.INFO: Getting transfer details for ID: 36  
+[2025-12-05 20:59:36] local.INFO: Transfer found: GT-051225008  
+[2025-12-05 20:59:36] local.INFO: Gudang Pengirim ID: 1  
+[2025-12-05 20:59:36] local.INFO: Gudang Penerima ID: 2  
+[2025-12-05 20:59:36] local.INFO: Gudang Pengirim Object: Exists  
+[2025-12-05 20:59:36] local.INFO: Gudang Penerima Object: Exists  
+[2025-12-05 20:59:36] local.INFO: Gudang Pengirim Name: Gudang Utama  
+[2025-12-05 20:59:36] local.INFO: Gudang Penerima Name: Gudang Cabang  
+[2025-12-05 20:59:41] local.INFO: Adding stock: Product 31231, Warehouse 2, Qty 1.00  
+[2025-12-05 20:59:41] local.INFO: Stock updated: 31231 in warehouse 2 from 152 to 153  
+[2025-12-05 21:12:18] local.INFO: Getting transfer details for ID: 40  
+[2025-12-05 21:12:18] local.INFO: Transfer found: GT-051225012  
+[2025-12-05 21:12:18] local.INFO: Gudang Pengirim ID: 1  
+[2025-12-05 21:12:18] local.INFO: Gudang Penerima ID: 3  
+[2025-12-05 21:12:18] local.INFO: Gudang Pengirim Object: Exists  
+[2025-12-05 21:12:18] local.INFO: Gudang Penerima Object: Exists  
+[2025-12-05 21:12:18] local.INFO: Gudang Pengirim Name: Gudang Utama  
+[2025-12-05 21:12:18] local.INFO: Gudang Penerima Name: Gudang Cabang Barat  
+[2025-12-05 21:12:20] local.INFO: Adding stock: Product 31231, Warehouse 3, Qty 10.00  
+[2025-12-05 21:12:20] local.INFO: New stock created: 31231 in warehouse 3 with qty 10.00  
+[2025-12-05 21:12:24] local.INFO: Getting transfer details for ID: 42  
+[2025-12-05 21:12:24] local.INFO: Transfer found: GT-051225014  
+[2025-12-05 21:12:24] local.INFO: Gudang Pengirim ID: 1  
+[2025-12-05 21:12:24] local.INFO: Gudang Penerima ID: 3  
+[2025-12-05 21:12:24] local.INFO: Gudang Pengirim Object: Exists  
+[2025-12-05 21:12:24] local.INFO: Gudang Penerima Object: Exists  
+[2025-12-05 21:12:24] local.INFO: Gudang Pengirim Name: Gudang Utama  
+[2025-12-05 21:12:24] local.INFO: Gudang Penerima Name: Gudang Cabang Barat  
+[2025-12-05 21:12:25] local.INFO: Adding stock: Product 31231, Warehouse 3, Qty 10.00  
+[2025-12-05 21:12:25] local.INFO: Stock updated: 31231 in warehouse 3 from 10 to 20  
+[2025-12-05 21:14:59] local.INFO: Getting transfer details for ID: 45  
+[2025-12-05 21:14:59] local.INFO: Transfer found: GT-051225017  
+[2025-12-05 21:14:59] local.INFO: Gudang Pengirim ID: 1  
+[2025-12-05 21:14:59] local.INFO: Gudang Penerima ID: 3  
+[2025-12-05 21:14:59] local.INFO: Gudang Pengirim Object: Exists  
+[2025-12-05 21:14:59] local.INFO: Gudang Penerima Object: Exists  
+[2025-12-05 21:14:59] local.INFO: Gudang Pengirim Name: Gudang Utama  
+[2025-12-05 21:14:59] local.INFO: Gudang Penerima Name: Gudang Cabang Barat  
+[2025-12-05 21:15:01] local.INFO: Adding stock: Product 31231, Warehouse 3, Qty 10.00  
+[2025-12-05 21:15:01] local.INFO: Stock updated: 31231 in warehouse 3 from 20 to 30  
+[2025-12-05 21:15:57] local.INFO: Getting transfer details for ID: 47  
+[2025-12-05 21:15:57] local.INFO: Transfer found: GT-051225019  
+[2025-12-05 21:15:57] local.INFO: Gudang Pengirim ID: 2  
+[2025-12-05 21:15:57] local.INFO: Gudang Penerima ID: 1  
+[2025-12-05 21:15:57] local.INFO: Gudang Pengirim Object: Exists  
+[2025-12-05 21:15:57] local.INFO: Gudang Penerima Object: Exists  
+[2025-12-05 21:15:57] local.INFO: Gudang Pengirim Name: Gudang Cabang  
+[2025-12-05 21:15:57] local.INFO: Gudang Penerima Name: Gudang Utama  
+[2025-12-05 21:16:00] local.INFO: Adding stock: Product 2323, Warehouse 1, Qty 10.00  
+[2025-12-05 21:16:00] local.INFO: New stock created: 2323 in warehouse 1 with qty 10.00  
+[2025-12-05 21:24:32] local.INFO: Getting transfer details for ID: 51  
+[2025-12-05 21:24:32] local.INFO: Transfer found: GT-051225023  
+[2025-12-05 21:24:32] local.INFO: Gudang Pengirim ID: 1  
+[2025-12-05 21:24:32] local.INFO: Gudang Penerima ID: 3  
+[2025-12-05 21:24:32] local.INFO: Gudang Pengirim Object: Exists  
+[2025-12-05 21:24:32] local.INFO: Gudang Penerima Object: Exists  
+[2025-12-05 21:24:32] local.INFO: Gudang Pengirim Name: Gudang Utama  
+[2025-12-05 21:24:32] local.INFO: Gudang Penerima Name: Gudang Cabang Barat  
+[2025-12-05 21:24:50] local.INFO: Adding stock: Product 7777, Warehouse 3, Qty 1.00  
+[2025-12-05 21:24:50] local.INFO: New stock created: 7777 in warehouse 3 with qty 1.00  
+[2025-12-05 21:50:07] local.INFO: Getting transfer details for ID: 54  
+[2025-12-05 21:50:07] local.INFO: Transfer found: GT-051225026  
+[2025-12-05 21:50:07] local.INFO: Gudang Pengirim ID: 2  
+[2025-12-05 21:50:07] local.INFO: Gudang Penerima ID: 1  
+[2025-12-05 21:50:07] local.INFO: Gudang Pengirim Object: Exists  
+[2025-12-05 21:50:07] local.INFO: Gudang Penerima Object: Exists  
+[2025-12-05 21:50:07] local.INFO: Gudang Pengirim Name: Gudang Cabang  
+[2025-12-05 21:50:07] local.INFO: Gudang Penerima Name: Gudang Utama  
+[2025-12-05 21:50:09] local.INFO: Adding stock: Product 9999, Warehouse 1, Qty 1.00  
+[2025-12-05 21:50:09] local.INFO: New stock created: 9999 in warehouse 1 with qty 1.00  
+[2025-12-05 21:50:13] local.INFO: Getting transfer details for ID: 52  
+[2025-12-05 21:50:13] local.INFO: Transfer found: GT-051225024  
+[2025-12-05 21:50:13] local.INFO: Gudang Pengirim ID: 1  
+[2025-12-05 21:50:13] local.INFO: Gudang Penerima ID: 3  
+[2025-12-05 21:50:13] local.INFO: Gudang Pengirim Object: Exists  
+[2025-12-05 21:50:13] local.INFO: Gudang Penerima Object: Exists  
+[2025-12-05 21:50:13] local.INFO: Gudang Pengirim Name: Gudang Utama  
+[2025-12-05 21:50:13] local.INFO: Gudang Penerima Name: Gudang Cabang Barat  
+[2025-12-05 21:50:14] local.INFO: Adding stock: Product 678, Warehouse 3, Qty 1.00  
+[2025-12-05 21:50:14] local.INFO: New stock created: 678 in warehouse 3 with qty 1.00  

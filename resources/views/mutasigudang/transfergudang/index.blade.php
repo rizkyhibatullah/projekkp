@@ -77,7 +77,21 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="10" class="text-center">Belum ada data transfer gudang.</td>
+                                <td colspan="10" class="text-center py-5">
+                                    <div class="d-flex flex-column align-items-center justify-content-center">
+                                        <img src="{{ asset('img/svg/undraw_editable_dywm.svg') }}" alt="Tidak ada data" style="height: 150px; width: auto; opacity: 0.8;" class="mb-4">
+
+                                        <h5 class="font-weight-bold text-gray-800 mb-2">Belum ada Data Transfer</h5>
+                                        <p class="text-gray-500 mb-0">
+                                            Saat ini belum ada data transfer gudang (Draft) yang tersedia.<br>
+                                            Silakan buat transfer baru untuk memulai.
+                                        </p>
+
+                                        <a href="{{ route('transfergudang.create') }}" class="btn btn-primary btn-sm mt-3">
+                                            <i class="fas fa-plus"></i> Buat Transfer Baru
+                                        </a>
+                                    </div>
+                                </td>
                             </tr>
                         @endforelse
                     </tbody>
@@ -212,7 +226,21 @@
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="{{ $transfer->trx_posting === 'F' ? '9' : '8' }}" class="text-center">Belum ada barang yang ditambahkan.</td>
+                            <td colspan="{{ $transfer->trx_posting === 'F' ? '9' : '8' }}" class="text-center py-5">
+                                <div class="d-flex flex-column align-items-center justify-content-center">
+                                    <div class="mb-3">
+                                        <i class="fas fa-box-open fa-4x text-gray-300"></i>
+                                    </div>
+                                    <h6 class="font-weight-bold text-gray-600">Belum ada barang ditambahkan</h6>
+                                    
+                                    @if($transfer->trx_posting === 'F')
+                                        <p class="text-gray-500 mb-2 small">Gunakan tombol di atas untuk menambah barang.</p>
+                                        <button type="button" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#detailModal">
+                                            <i class="fas fa-plus"></i> Tambah Barang Manual
+                                        </button>
+                                    @endif
+                                </div>
+                            </td>
                         </tr>
                         @endforelse
                     </tbody>

@@ -8,20 +8,14 @@
             <div class="alert alert-success">{{ session('success') }}</div>
         @endif
         
-        {{-- BAGIAN YANG DIUBAH ADA DI BAWAH INI --}}
         <div class="mb-3">
-            {{-- Tombol 'Tambah Gudang' Anda yang sudah ada --}}
             <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#warehouseModal">
                 <i class="fas fa-plus"></i> Tambah Gudang
             </button>
-            
-            {{-- INI TOMBOL BARU "LAPORAN STOK" --}}
-            {{-- Kita pakai ms-2 (margin-start) untuk memberi jarak --}}
             <a href="{{ route('inventory.stock_report') }}" class="btn btn-success mb-3 ms-2">
                 <i class="fas fa-file-alt"></i> Laporan Stok
             </a>
         </div>
-        {{-- BATAS AKHIR PERUBAHAN --}}
 
 
         <div class="card shadow mb-4">
@@ -46,19 +40,19 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach($warehouses as $index => $warehouse)
-                        <tr>
-                            <td>{{ $index + 1 }}</td>
-                            <td>{{ $warehouse->WARE_Name }}</td>
-                            <td>{{ $warehouse->WARE_Address }}</td>
-                            <td>{{ $warehouse->WARE_Phone }}</td>
-                            <td>{{ $warehouse->WARE_Email }}</td>
-                            <td>{{ $warehouse->WARE_Web }}</td>
-                            <td>{{ $warehouse->ware_note1 }}</td>
-                            <td>{{ $warehouse->ware_note2 }}</td>
-                            <td>{{ $warehouse->WARE_EntryDate ? \Carbon\Carbon::parse($warehouse->WARE_EntryDate)->format('d F Y') : '' }}</td>
-                            <td>
-                                <div class="d-flex gap-2">
+                    @forelse($warehouses as $index => $warehouse)
+                    <tr>
+                        <td>{{ $index + 1 }}</td>
+                        <td>{{ $warehouse->WARE_Name }}</td>
+                        <td>{{ $warehouse->WARE_Address }}</td>
+                        <td>{{ $warehouse->WARE_Phone }}</td>
+                        <td>{{ $warehouse->WARE_Email }}</td>
+                        <td>{{ $warehouse->WARE_Web }}</td>
+                        <td>{{ $warehouse->ware_note1 }}</td>
+                        <td>{{ $warehouse->ware_note2 }}</td>
+                        <td>{{ $warehouse->WARE_EntryDate ? \Carbon\Carbon::parse($warehouse->WARE_EntryDate)->format('d F Y') : '' }}</td>
+                        <td>
+                            <div class="d-flex gap-2">
                                 <button class="btn btn-sm btn-warning edit-btn"
                                     data-id="{{ $warehouse->WARE_Auto }}"
                                     data-name="{{ $warehouse->WARE_Name }}"
@@ -71,18 +65,33 @@
                                     <i class="fas fa-edit"></i>
                                 </button>
                                 <button
-                                type="button"
-                                class="btn btn-sm btn-danger delete-btn"
-                                data-id="{{ $warehouse->WARE_Auto }}"
-                                data-name="{{ $warehouse->WARE_Name ?? 'item ini' }}"
-                                data-url="{{ route('warehouse.destroy', $warehouse->WARE_Auto) }}">
-                                <i class="fas fa-trash"></i>
-                            </button>
+                                    type="button"
+                                    class="btn btn-sm btn-danger delete-btn"
+                                    data-id="{{ $warehouse->WARE_Auto }}"
+                                    data-name="{{ $warehouse->WARE_Name ?? 'item ini' }}"
+                                    data-url="{{ route('warehouse.destroy', $warehouse->WARE_Auto) }}">
+                                    <i class="fas fa-trash"></i>
+                                </button>
                             </div>
-                            </td>
-                        </tr>
-                        @endforeach
-                    </tbody>
+                        </td>
+                    </tr>
+                    @empty
+                    <tr>
+                        <td colspan="10" class="text-center py-5">
+                            <div class="d-flex flex-column align-items-center justify-content-center">
+                                <img src="{{ asset('img/svg/undraw_editable_dywm.svg') }}" alt="Tidak ada data" style="height: 150px; width: auto; opacity: 0.8;" class="mb-4">
+                                <h5 class="font-weight-bold text-gray-800 mb-2">Data Gudang Kosong</h5>
+                                <p class="text-gray-500 mb-3">
+                                    Belum ada master data gudang yang didaftarkan.
+                                </p>
+                                <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#warehouseModal">
+                                    <i class="fas fa-plus"></i> Tambah Gudang Pertama
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    @endforelse
+                </tbody>
                 </table>
             </div>
         </div>
