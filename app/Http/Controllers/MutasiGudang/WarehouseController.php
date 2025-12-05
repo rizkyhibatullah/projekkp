@@ -57,6 +57,12 @@ class WarehouseController extends Controller
     {
         try {
             $warehouse = Warehouse::findOrFail($id);
+            if ($warehouse->products()->count() > 0) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Gudang tidak dapat dihapus karena memiliki produk terkait.'
+                ], 500);
+            }
             $warehouse->delete();
 
             return response()->json([
