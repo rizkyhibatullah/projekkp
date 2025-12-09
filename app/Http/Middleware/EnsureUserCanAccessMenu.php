@@ -11,6 +11,11 @@ class EnsureUserCanAccessMenu
 {
     public function handle(Request $request, Closure $next)
     {
+
+        if ($request->is('api/*')) {
+            return $next($request);
+        }
+
         if (!Auth::check()) {
             return redirect()->route('login');
         }

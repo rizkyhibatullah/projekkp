@@ -36,6 +36,6 @@ class PenjualanDetail extends Model
     public function product()
     {
         // UBAH MODEL DI SINI
-        return $this->belongsTo(Dtproduk::class, 'kode_produk'); // <-- GANTI DENGAN MODEL PRODUK ANDA YANG BENAR
+        return $this->belongsTo(Dtproduk::class, 'product_id'); // <-- GANTI DENGAN MODEL PRODUK ANDA YANG BENAR
     }
 }

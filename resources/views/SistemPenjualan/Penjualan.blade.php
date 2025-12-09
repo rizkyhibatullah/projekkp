@@ -8,14 +8,15 @@
     @if(session('success'))
     <div class="alert alert-success alert-dismissible fade show" role="alert">
         {{ session('success') }}
-        <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span
+                aria-hidden="true">&times;</span></button>
     </div>
     @endif
 
     <div class="mb-3">
         @php
-            $currentRouteName = Route::currentRouteName();
-            $currentMenuSlug = Str::beforeLast($currentRouteName, '.'); 
+        $currentRouteName = Route::currentRouteName();
+        $currentMenuSlug = Str::beforeLast($currentRouteName, '.');
         @endphp
         @can('tambah', $currentMenuSlug)
         <button type="button" class="btn btn-primary" id="btnTambahJualan">
@@ -51,14 +52,29 @@
                             <td class="text-center">{{ $jualan->no_jualan }}</td>
                             <td>{{ $jualan->pelanggan->anggota ?? 'N/A' }}</td>
                             <td class="text-center">{{ $jualan->customerOrder->no_order ?? 'N/A' }}</td>
-                            <td class="text-center">{{ \Carbon\Carbon::parse($jualan->tgl_kirim)->format('d/m/Y') }}</td>
-                            <td class="text-center">{{ $jualan->jatuh_tempo ? \Carbon\Carbon::parse($jualan->jatuh_tempo)->format('d/m/Y') : '-' }}</td>
-                            <td class="text-right">Rp{{ number_format($jualan->netto, 0, ',', '.') }}</td>
-                            <td class="text-center">
-                                <span class="badge badge-{{ $jualan->status == 'Draft' ? 'secondary' : 'success' }}">{{ $jualan->status }}</span>
+                            <td class="text-center">{{ \Carbon\Carbon::parse($jualan->tgl_kirim)->format('d/m/Y') }}
                             </td>
                             <td class="text-center">
-                                <a href="#" class="btn btn-sm btn-info" title="Lihat Detail"><i class="fas fa-eye"></i></a>
+                                {{ $jualan->jatuh_tempo ? \Carbon\Carbon::parse($jualan->jatuh_tempo)->format('d/m/Y') : '-' }}
+                            </td>
+                            <td class="text-right">Rp{{ number_format($jualan->netto, 0, ',', '.') }}</td>
+                            <td class="text-center">
+                                <span class="badge badge-{{ $jualan->status == 'Draft' ? 'secondary' : ($jualan->status == 'Approved' ? 'success' : 'danger') }}">
+                                    {{ $jualan->status }}
+                                </span>
+                            </td>
+                            <td class="text-center">
+                                <a href="#" class="btn btn-sm btn-info view-btn" title="Lihat Detail" data-id="{{ $jualan->id }}"><i
+                                        class="fas fa-eye"></i></a>
+                                @if($jualan->status == 'Draft')
+                                @can('approve', $currentMenuSlug)
+                                <button class="btn btn-sm btn-success approve-btn" title="Approve Penjualan"
+                                    data-id="{{ $jualan->id }}"
+                                    data-no_jualan="{{ $jualan->no_jualan }}">
+                                    <i class="fas fa-check"></i>
+                                </button>
+                                @endcan
+                                @endif
                             </td>
                         </tr>
                         @empty
@@ -74,7 +90,8 @@
 </div>
 
 <!-- Modal for creating a new sale -->
-<div class="modal fade" id="jualanModal" tabindex="-1" role="dialog" aria-labelledby="jualanModalLabel" aria-hidden="true">
+<div class="modal fade" id="jualanModal" tabindex="-1" role="dialog" aria-labelledby="jualanModalLabel"
+    aria-hidden="true">
     <div class="modal-dialog modal-xl" role="document">
         <div class="modal-content">
             <div class="modal-header">
@@ -86,42 +103,129 @@
             <div class="modal-body">
                 <form id="formJualan" action="{{ route('penjualan.store') }}" method="POST">
                     @csrf
+                    <!-- Tambahkan field tersembunyi untuk pengguna -->
+                    <input type="hidden" id="pengguna" name="pengguna" value="{{ Auth::user()->name ?? 'System' }}">
+
                     {{-- Form Header --}}
                     <div class="row">
                         <div class="col-md-6">
-                            <div class="form-group row"><label class="col-sm-4 col-form-label-sm">NO# Jualan</label><div class="col-sm-8"><input type="text" class="form-control form-control-sm" value="AUTO" readonly></div></div>
-                            <div class="form-group row"><label class="col-sm-4 col-form-label-sm">Pelanggan <span class="text-danger">*</span></label><div class="col-sm-8"><select class="form-control form-control-sm" id="pelanggan_id" name="pelanggan_id" required><option value="" data-lama_bayar="0">--- Pilih Pelanggan ---</option>@foreach($pelanggans as $p)<option value="{{ $p->id }}" data-lama_bayar="{{ $p->lama_bayar ?? 0 }}">{{ $p->anggota }}</option>@endforeach</select></div></div>
-                            <div class="form-group row"><label class="col-sm-4 col-form-label-sm">No# CO <span class="text-danger">*</span></label><div class="col-sm-8"><select class="form-control form-control-sm" id="customer_order_id" name="customer_order_id" required disabled><option>--- Pilih Pelanggan ---</option></select></div></div>
+                            <div class="form-group row"><label class="col-sm-4 col-form-label-sm">NO# Jualan</label>
+                                <div class="col-sm-8"><input type="text" class="form-control form-control-sm"
+                                        value="AUTO" readonly></div>
+                            </div>
+                            <div class="form-group row"><label class="col-sm-4 col-form-label-sm">Pelanggan <span
+                                        class="text-danger">*</span></label>
+                                <div class="col-sm-8"><select class="form-control form-control-sm" id="pelanggan_id"
+                                        name="pelanggan_id" required>
+                                        <option value="" data-lama_bayar="0">--- Pilih Pelanggan ---</option>
+                                        @foreach($pelanggans as $p)<option value="{{ $p->id }}"
+                                            data-lama_bayar="{{ $p->lama_bayar ?? 0 }}">{{ $p->anggota }}</option>
+                                        @endforeach
+                                    </select></div>
+                            </div>
+                            <div class="form-group row"><label class="col-sm-4 col-form-label-sm">No# CO <span
+                                        class="text-danger">*</span></label>
+                                <div class="col-sm-8"><select class="form-control form-control-sm"
+                                        id="customer_order_id" name="customer_order_id" required disabled>
+                                        <option>--- Pilih Pelanggan ---</option>
+                                    </select></div>
+                            </div>
                         </div>
                         <div class="col-md-6">
-                            <div class="form-group row"><label class="col-sm-4 col-form-label-sm">Tgl. Kirim <span class="text-danger">*</span></label><div class="col-sm-8"><input type="date" class="form-control form-control-sm" id="tgl_kirim" name="tgl_kirim" value="{{ date('Y-m-d') }}" required></div></div>
-                            <div class="form-group row"><label class="col-sm-4 col-form-label-sm">Jatuh Tempo</label><div class="col-sm-8"><input type="date" class="form-control form-control-sm" id="jatuh_tempo" name="jatuh_tempo" readonly></div></div>
-                            <div class="form-group row"><label class="col-sm-4 col-form-label-sm">PO Pelanggan</label><div class="col-sm-8"><input type="text" class="form-control form-control-sm" id="po_pelanggan" name="po_pelanggan" readonly></div></div>
+                            <div class="form-group row"><label class="col-sm-4 col-form-label-sm">Tgl. Kirim <span
+                                        class="text-danger">*</span></label>
+                                <div class="col-sm-8"><input type="date" class="form-control form-control-sm"
+                                        id="tgl_kirim" name="tgl_kirim" value="{{ date('Y-m-d') }}" required></div>
+                            </div>
+                            <div class="form-group row"><label class="col-sm-4 col-form-label-sm">Jatuh Tempo</label>
+                                <div class="col-sm-8"><input type="date" class="form-control form-control-sm"
+                                        id="jatuh_tempo" name="jatuh_tempo" readonly></div>
+                            </div>
+                            <div class="form-group row"><label class="col-sm-4 col-form-label-sm">PO Pelanggan</label>
+                                <div class="col-sm-8"><input type="text" class="form-control form-control-sm"
+                                        id="po_pelanggan" name="po_pelanggan" readonly></div>
+                            </div>
                         </div>
                     </div>
                     <hr>
                     {{-- Item Details Table --}}
                     <div class="table-responsive">
                         <table class="table table-bordered table-sm" id="jualanDetailTable">
-                            <thead class="thead-light"><tr><th>Produk</th><th width="10%">Qty</th><th>Satuan</th><th>Harga</th><th width="8%">Disc(%)</th><th>Pajak</th><th>Nominal</th><th>Catatan</th></tr></thead>
-                            <tbody><tr><td colspan="8" class="text-center text-muted">Pilih Customer Order untuk menampilkan data.</td></tr></tbody>
+                            <thead class="thead-light">
+                                <tr>
+                                    <th>Produk</th>
+                                    <th width="10%">Qty</th>
+                                    <th>Satuan</th>
+                                    <th>Harga</th>
+                                    <th width="8%">Disc(%)</th>
+                                    <th>Pajak</th>
+                                    <th>Nominal</th>
+                                    <th>Catatan</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td colspan="8" class="text-center text-muted">Pilih Customer Order untuk
+                                        menampilkan data.</td>
+                                </tr>
+                            </tbody>
                         </table>
                     </div>
                     <hr>
                     {{-- Totals --}}
                     <div class="row justify-content-end">
                         <div class="col-md-5">
-                            <div class="form-group row align-items-center"><label class="col-sm-4 col-form-label">Bruto</label><div class="col-sm-8"><input type="text" class="form-control text-right" id="bruto" readonly></div></div>
-                            <div class="form-group row align-items-center"><label class="col-sm-4 col-form-label">Total Disc.</label><div class="col-sm-8"><input type="text" class="form-control text-right" id="total_disc" readonly></div></div>
-                            <div class="form-group row align-items-center"><label class="col-sm-4 col-form-label">Total Pajak</label><div class="col-sm-8"><input type="text" class="form-control text-right" id="total_pajak" readonly></div></div>
-                            <div class="form-group row font-weight-bold align-items-center"><label class="col-sm-4 col-form-label">Netto</label><div class="col-sm-8"><input type="text" class="form-control text-right" id="netto" readonly></div></div>
+                            <div class="form-group row align-items-center"><label
+                                    class="col-sm-4 col-form-label">Bruto</label>
+                                <div class="col-sm-8"><input type="text" class="form-control text-right" id="bruto"
+                                        readonly></div>
+                            </div>
+                            <div class="form-group row align-items-center"><label class="col-sm-4 col-form-label">Total
+                                    Disc.</label>
+                                <div class="col-sm-8"><input type="text" class="form-control text-right" id="total_disc"
+                                        readonly></div>
+                            </div>
+                            <div class="form-group row align-items-center"><label class="col-sm-4 col-form-label">Total
+                                    Pajak</label>
+                                <div class="col-sm-8"><input type="text" class="form-control text-right"
+                                        id="total_pajak" readonly></div>
+                            </div>
+                            <div class="form-group row font-weight-bold align-items-center"><label
+                                    class="col-sm-4 col-form-label">Netto</label>
+                                <div class="col-sm-8"><input type="text" class="form-control text-right" id="netto"
+                                        readonly></div>
+                            </div>
                         </div>
                     </div>
                 </form>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
-                <button type="button" class="btn btn-primary" id="btnSimpanJualan"><i class="fas fa-save mr-1"></i> Simpan Jualan</button>
+                <button type="button" class="btn btn-primary" id="btnSimpanJualan"><i class="fas fa-save mr-1"></i>
+                    Simpan Jualan</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal for viewing sale details -->
+<div class="modal fade" id="viewModal" tabindex="-1" role="dialog" aria-labelledby="viewModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title font-weight-bold" id="viewModalLabel">Detail Penjualan</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div id="saleDetails">
+                    <!-- Details will be loaded here -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Tutup</button>
             </div>
         </div>
     </div>
@@ -131,20 +235,35 @@
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
-$(document).ready(function() {
+ $(document).ready(function() {
     // --- Config ---
     const modal = $('#jualanModal');
     const form = $('#formJualan');
+    const viewModal = $('#viewModal');
+
     // Correctly define API routes using Laravel's route() helper
     const outstandingOrdersUrlTpl = "{{ route('api.jualan.outstanding-orders', ':pelanggan') }}";
     const orderDetailsUrlTpl = "{{ route('api.jualan.order-details', ':customerOrder') }}";
+    const approveUrlTpl = "{{ route('penjualan.approve', ':id') }}";
+    const viewUrlTpl = "{{ route('penjualan.show', ':id') }}";
+    const csrfToken = "{{ csrf_token() }}";
 
     // --- Initialize DataTable ---
-    $('#dataTable').DataTable({ "language": { "url": "//cdn.datatables.net/plug-ins/1.10.21/i18n/Indonesian.json" } });
+    $('#dataTable').DataTable({
+        "language": {
+            "url": "//cdn.datatables.net/plug-ins/1.10.21/i18n/Indonesian.json"
+        }
+    });
 
     // --- Helper Functions ---
-    function formatCurrency(num) { return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(num); }
-    
+    function formatCurrency(num) {
+        return new Intl.NumberFormat('id-ID', {
+            style: 'currency',
+            currency: 'IDR',
+            minimumFractionDigits: 0
+        }).format(num);
+    }
+
     function calculateDueDate() {
         const tglKirim = $('#tgl_kirim').val();
         const lamaBayar = parseInt($('#pelanggan_id').find('option:selected').data('lama_bayar')) || 0;
@@ -158,7 +277,9 @@ $(document).ready(function() {
     }
 
     function updateTotals() {
-        let bruto = 0, totalDisc = 0, totalPajak = 0;
+        let bruto = 0,
+            totalDisc = 0,
+            totalPajak = 0;
         $('#jualanDetailTable tbody tr').each(function() {
             if ($(this).find('td').length <= 1) return;
             const row = $(this);
@@ -166,11 +287,11 @@ $(document).ready(function() {
             const harga = parseFloat(row.find('.input-harga').val()) || 0;
             const discPercent = parseFloat(row.find('.input-disc').val()) || 0;
             const pajak = parseFloat(row.find('.input-pajak').val()) || 0;
-            
+
             const totalHarga = qty * harga;
             const discAmount = totalHarga * (discPercent / 100);
             const nominal = totalHarga - discAmount + pajak;
-            
+
             row.find('.input-nominal').val(nominal.toFixed(2));
             bruto += totalHarga;
             totalDisc += discAmount;
@@ -188,8 +309,13 @@ $(document).ready(function() {
         form.trigger('reset');
         $('#jualanModalLabel').text('Buat Jualan Baru');
         $('#customer_order_id').html('<option>--- Pilih Pelanggan ---</option>').prop('disabled', true);
-        $('#jualanDetailTable tbody').html('<tr><td colspan="8" class="text-center text-muted">Pilih Customer Order.</td></tr>');
+        $('#jualanDetailTable tbody').html(
+            '<tr><td colspan="8" class="text-center text-muted">Pilih Customer Order.</td></tr>');
         $('#tgl_kirim').val(new Date().toISOString().split('T')[0]);
+
+        // Set nilai pengguna saat modal dibuka
+        $('#pengguna').val('{{ Auth::user()->name ?? "System" }}');
+
         calculateDueDate();
         updateTotals();
         modal.modal('show');
@@ -204,19 +330,22 @@ $(document).ready(function() {
     form.on('change', '#pelanggan_id', function() {
         const customerId = $(this).val();
         const coSelect = $('#customer_order_id');
-        $('#jualanDetailTable tbody').html('<tr><td colspan="8" class="text-center text-muted">Pilih Customer Order.</td></tr>');
+        $('#jualanDetailTable tbody').html(
+            '<tr><td colspan="8" class="text-center text-muted">Pilih Customer Order.</td></tr>');
         updateTotals();
 
         if (!customerId) {
             coSelect.html('<option>--- Pilih Pelanggan ---</option>').prop('disabled', true);
             return;
         }
-        
+
         coSelect.html('<option>Memuat...</option>').prop('disabled', true);
         $.get(outstandingOrdersUrlTpl.replace(':pelanggan', customerId), function(orders) {
             coSelect.html('<option value="">--- Pilih CO ---</option>');
             if (orders.length > 0) {
-                orders.forEach(o => coSelect.append(`<option value="${o.id}" data-po="${o.po_pelanggan || ''}">${o.no_order}</option>`));
+                orders.forEach(o => coSelect.append(
+                    `<option value="${o.id}" data-po="${o.po_pelanggan || ''}">${o.no_order}</option>`
+                ));
                 coSelect.prop('disabled', false);
             } else {
                 coSelect.html('<option value="">--- Tidak ada CO ---</option>');
@@ -231,41 +360,65 @@ $(document).ready(function() {
         $('#po_pelanggan').val(po);
 
         if (!coId) {
-            tableBody.html('<tr><td colspan="8" class="text-center text-muted">Pilih Customer Order.</td></tr>');
+            tableBody.html(
+                '<tr><td colspan="8" class="text-center text-muted">Pilih Customer Order.</td></tr>'
+            );
             updateTotals();
             return;
         }
 
+        const url = orderDetailsUrlTpl.replace(':customerOrder', coId);
+        console.log('Fetching order details from:', url);
+
         $.ajax({
-            url: orderDetailsUrlTpl.replace(':customerOrder', coId),
-            beforeSend: () => tableBody.html('<tr><td colspan="8" class="text-center"><i class="fas fa-spinner fa-spin"></i> Memuat...</td></tr>'),
-            success: function(details) {
+            url: url,
+            method: 'GET',
+            beforeSend: () => {
+                console.log('Sending request to:', url);
+                tableBody.html(
+                    '<tr><td colspan="8" class="text-center"><i class="fas fa-spinner fa-spin"></i> Memuat...</td></tr>'
+                );
+            },
+            success: function(response) {
+                console.log('Response received:', response);
                 tableBody.empty();
-                if (details.length > 0) {
-                    details.forEach(item => {
-                        // Ensure product is not null
-                        const productName = item.product ? item.product.nama : 'Produk tidak ditemukan';
-                        const productSatuan = item.product ? item.product.satuan : 'N/A';
-                        
+                if (response.length > 0) {
+                    response.forEach(item => {
+                        // Perbaikan: Gunakan nama_produk bukan nama
+                        const productName = item.product ? item.product
+                            .nama_produk : 'Produk tidak ditemukan';
+                        // Perbaikan: Gunakan nilai default untuk satuan karena tidak ada field satuan di Dtproduk
+                        const productSatuan = 'pcs';
+
                         tableBody.append(`
-                            <tr>
-                                <td><input type="text" value="${productName}" class="form-control form-control-sm" readonly></td>
-                                <td><input type="number" name="items[${item.id}][qty]" value="${item.qty}" class="form-control form-control-sm text-right input-qty" step="any"></td>
-                                <td><input type="text" value="${productSatuan}" class="form-control form-control-sm" readonly></td>
-                                <td><input type="number" value="${item.harga}" class="form-control form-control-sm text-right input-harga" readonly step="any"></td>
-                                <td><input type="number" name="items[${item.id}][disc]" value="${item.disc || 0}" class="form-control form-control-sm text-right input-disc" step="any"></td>
-                                <td><input type="number" name="items[${item.id}][pajak]" value="${item.pajak || 0}" class="form-control form-control-sm text-right input-pajak" step="any"></td>
-                                <td><input type="number" name="items[${item.id}][nominal]" class="form-control form-control-sm text-right input-nominal" readonly step="any"></td>
-                                <td><input type="text" name="items[${item.id}][catatan]" value="${item.catatan || ''}" class="form-control form-control-sm"></td>
-                            </tr>
-                        `);
+                        <tr>
+                            <td><input type="text" value="${productName}" class="form-control form-control-sm" readonly></td>
+                            <td><input type="number" name="items[${item.id}][qty]" value="${item.qty}" class="form-control form-control-sm text-right input-qty" step="any"></td>
+                            <td><input type="text" value="${productSatuan}" class="form-control form-control-sm" readonly></td>
+                            <td><input type="number" value="${item.harga}" class="form-control form-control-sm text-right input-harga" readonly step="any"></td>
+                            <td><input type="number" name="items[${item.id}][disc]" value="${item.disc || 0}" class="form-control form-control-sm text-right input-disc" step="any"></td>
+                            <td><input type="number" name="items[${item.id}][pajak]" value="${item.pajak || 0}" class="form-control form-control-sm text-right input-pajak" step="any"></td>
+                            <td><input type="number" name="items[${item.id}][nominal]" class="form-control form-control-sm text-right input-nominal" readonly step="any"></td>
+                            <td><input type="text" name="items[${item.id}][catatan]" value="${item.catatan || ''}" class="form-control form-control-sm"></td>
+                        </tr>
+                    `);
                     });
                     updateTotals();
                 } else {
-                    tableBody.html('<tr><td colspan="8" class="text-center text-muted">Tidak ada item detail di CO ini.</td></tr>');
+                    tableBody.html(
+                        '<tr><td colspan="8" class="text-center text-muted">Tidak ada item detail di CO ini.</td></tr>'
+                    );
                 }
             },
-            error: () => tableBody.html('<tr><td colspan="8" class="text-center text-danger">Gagal memuat data.</td></tr>')
+            error: function(xhr) {
+                console.error('Error loading order details:', xhr);
+                console.error('Status:', xhr.status);
+                console.error('Response Text:', xhr.responseText);
+                tableBody.html(
+                    '<tr><td colspan="8" class="text-center text-danger">Gagal memuat data. Status: ' +
+                    xhr.status + '</td></tr>'
+                );
+            }
         });
     });
 
@@ -278,24 +431,109 @@ $(document).ready(function() {
             Swal.fire('Error!', 'Pelanggan dan Customer Order wajib diisi.', 'error');
             return;
         }
-        
+
+        // Pastikan field pengguna ada dan memiliki nilai
+        if ($('#pengguna').length === 0) {
+            form.append('<input type="hidden" name="pengguna" value="{{ Auth::user()->name ?? "System" }}">');
+        }
+
+        // Debugging: Tampilkan data yang akan dikirim
+        const formData = form.serialize();
+        console.log('Form data being sent:', formData);
+        console.log('Pengguna field value:', $('#pengguna').val());
+
         $.ajax({
             url: form.attr('action'),
             method: 'POST',
             data: form.serialize(),
-            beforeSend: () => submitBtn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Menyimpan...'),
+            beforeSend: () => submitBtn.prop('disabled', true).html(
+                '<i class="fas fa-spinner fa-spin"></i> Menyimpan...'),
             success: function(response) {
                 modal.modal('hide');
-                Swal.fire('Berhasil!', response.message, 'success').then(() => location.reload());
+                Swal.fire('Berhasil!', response.message, 'success').then(() => location
+                    .reload());
             },
             error: function(xhr) {
                 let errorMsg = 'Terjadi kesalahan.';
                 if (xhr.responseJSON) {
-                    errorMsg = xhr.responseJSON.message || (xhr.responseJSON.errors ? Object.values(xhr.responseJSON.errors).flat().join('<br>') : errorMsg);
+                    errorMsg = xhr.responseJSON.message || (xhr.responseJSON.errors ? Object
+                        .values(xhr.responseJSON.errors).flat().join('<br>') : errorMsg);
                 }
                 Swal.fire('Error!', errorMsg, 'error');
             },
             complete: () => submitBtn.prop('disabled', false).html(originalHtml)
+        });
+    });
+
+    // Event handler untuk approve button
+    $(document).on('click', '.approve-btn', function(e) {
+        e.preventDefault();
+
+        const btn = $(this);
+        const id = btn.data('id');
+        const noJualan = btn.data('no_jualan');
+
+        console.log('Approve button clicked for ID:', id, 'No Jualan:', noJualan);
+
+        Swal.fire({
+            title: 'Konfirmasi Approve',
+            html: `Apakah Anda yakin ingin approve penjualan <strong>${noJualan}</strong>?<br>Stok barang akan dikurangi setelah approve.`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Ya, Approve!',
+            cancelButtonText: 'Batal',
+            confirmButtonColor: '#28a745'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                console.log('Sending approve request to:', approveUrlTpl.replace(':id', id));
+
+                $.ajax({
+                    url: approveUrlTpl.replace(':id', id),
+                    method: 'POST',
+                    data: {
+                        '_token': csrfToken
+                    },
+                    beforeSend: function() {
+                        btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i>');
+                    },
+                    success: function(response) {
+                        console.log('Approve success:', response);
+                        Swal.fire('Berhasil!', response.message, 'success')
+                            .then(() => location.reload());
+                    },
+                    error: function(xhr) {
+                        console.error('Approve error:', xhr);
+                        btn.prop('disabled', false).html('<i class="fas fa-check"></i>');
+                        Swal.fire('Error', xhr.responseJSON?.message || 'Gagal approve penjualan.', 'error');
+                    }
+                });
+            }
+        });
+    });
+
+    // Event handler untuk view button
+    $(document).on('click', '.view-btn', function(e) {
+        e.preventDefault();
+
+        const btn = $(this);
+        const id = btn.data('id');
+
+        console.log('View button clicked for ID:', id);
+
+        $.ajax({
+            url: viewUrlTpl.replace(':id', id),
+            method: 'GET',
+            beforeSend: function() {
+                $('#saleDetails').html('<div class="text-center"><i class="fas fa-spinner fa-spin"></i> Memuat...</div>');
+                viewModal.modal('show');
+            },
+            success: function(response) {
+                $('#saleDetails').html(response);
+            },
+            error: function(xhr) {
+                console.error('View error:', xhr);
+                $('#saleDetails').html('<div class="alert alert-danger">Gagal memuat detail penjualan.</div>');
+            }
         });
     });
 });

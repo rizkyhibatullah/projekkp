@@ -103,7 +103,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/home', 'HomeController@index')->name('home');
     Route::get('/profile', 'ProfileController@index')->name('profile');
     Route::put('/profile', 'ProfileController@update')->name('profile.update');
-    
+
 });
 
 Route::middleware(['auth', 'can.access.menu'])->group(function () {
@@ -263,7 +263,7 @@ Route::middleware(['auth', 'can.access.menu'])->group(function () {
     });
 
     // --- Gudang Routes ---
-    
+
     Route::prefix('mutasigudang')->middleware(['auth'])->group(function () {
 
         // Gudang
@@ -290,10 +290,10 @@ Route::middleware(['auth', 'can.access.menu'])->group(function () {
         Route::get('transfergudang', [TransferGudangController::class, 'index'])->name('transfergudang.index');
         Route::get('transfergudang/create', [TransferGudangController::class, 'create'])->name('transfergudang.create');
         Route::get('transfergudang/{id}/edit', [TransferGudangController::class, 'edit'])->name('transfergudang.edit');
-        Route::get('transfergudang/{id}', [TransferGudangController::class, 'show'])->name('transfergudang.show'); 
+        Route::get('transfergudang/{id}', [TransferGudangController::class, 'show'])->name('transfergudang.show');
         Route::delete('transfergudang/{id}', [TransferGudangController::class, 'destroy'])->name('transfergudang.destroy');
         Route::put('transfergudang/{id}/update-header', [TransferGudangController::class, 'updateHeader'])->name('transfergudang.updateHeader');
-        Route::put('transfergudang/{id}/submit', [TransferGudangController::class, 'submit'])->name('transfergudang.submit'); 
+        Route::put('transfergudang/{id}/submit', [TransferGudangController::class, 'submit'])->name('transfergudang.submit');
         Route::post('transfergudang/detail/store', [TransferGudangController::class, 'storeDetail'])->name('transfergudang.storeDetail');
         Route::delete('transfergudang/{id}/details/{detailId}', [TransferGudangController::class, 'destroyDetail'])->name('transfergudang.destroyDetail');
         Route::get('transfergudang/fetch-details/{permintaanId}', [TransferGudangController::class, 'fetchPermintaanDetails'])->name('transfergudang.fetchDetails');
@@ -423,7 +423,9 @@ Route::middleware(['auth', 'can.access.menu'])->group(function () {
     Route::resource('pelanggan', PelangganController::class);
     Route::resource('customer-orders', DaftarPesananController::class);
     Route::resource('penjualan', PenjualanController::class)->only(['index', 'store']);
-
+    Route::get('/customer-orders/{id}/details', [\App\Http\Controllers\ControllerSP\DaftarPesananController::class, 'getOrderDetails']);
+    Route::post('penjualan/{id}/approve', [\App\Http\Controllers\ControllerSP\PenjualanController::class, 'approve'])->name('penjualan.approve');
+    Route::get('penjualan/{id}', [\App\Http\Controllers\ControllerSP\PenjualanController::class, 'show'])->name('penjualan.show');
 
         Route::prefix('api')->name('api.')->group(function () {
         Route::prefix('jualan')->name('jualan.')->group(function () {

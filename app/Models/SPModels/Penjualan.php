@@ -21,6 +21,15 @@ class Penjualan extends Model
     protected $guarded = ['id'];
 
     /**
+     * The attributes that should be cast.
+     *
+     * @var array
+     */
+    protected $casts = [
+        'approved_at' => 'datetime',
+    ];
+
+    /**
      * Get the pelanggan for the sale.
      */
     public function pelanggan()

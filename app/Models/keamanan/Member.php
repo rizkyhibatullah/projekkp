@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Models\keamanan;  
+namespace App\Models\keamanan;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -33,6 +33,17 @@ class Member extends Authenticatable
     public function getAuthIdentifierName()
     {
         return 'Mem_Auto';
+    }
+
+    public function getNameAttribute()
+    {
+        return $this->Mem_UserName;
+    }
+
+    // Override method getName dari Authenticatable
+    public function getName()
+    {
+        return $this->Mem_UserName;
     }
 
     public function getAuthIdentifier()

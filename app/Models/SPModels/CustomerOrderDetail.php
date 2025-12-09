@@ -2,6 +2,7 @@
 
 namespace App\Models\SPModels; // Corrected namespace
 
+use App\Models\Inventory\Dtproduk;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\Product; // Assuming Product model exists in App\Models
 
@@ -34,6 +35,6 @@ class CustomerOrderDetail extends Model
      */
     public function product()
     {
-        return $this->belongsTo(Product::class, 'product_id');
+        return $this->belongsTo(Dtproduk::class, 'product_id');
     }
 }

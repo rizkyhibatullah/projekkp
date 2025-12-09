@@ -24,9 +24,9 @@ class PenjualanController extends Controller
         $jualans = Penjualan::with(['pelanggan', 'customerOrder'])
             ->orderBy('created_at', 'desc')
             ->get();
-            
+
         $pelanggans = Pelanggan::where('status', 'Aktif')->orderBy('anggota')->get();
-        
+
         return view('SistemPenjualan.Penjualan', compact('jualans', 'pelanggans'));
     }
 
@@ -41,6 +41,7 @@ class PenjualanController extends Controller
             'tgl_kirim' => 'required|date',
             'items' => 'required|array|min:1',
             'items.*.qty' => 'required|numeric|min:0.01',
+            'pengguna' => 'required|string',
         ]);
 
         if ($validator->fails()) {
@@ -70,51 +71,37 @@ class PenjualanController extends Controller
             }
             $netto = $bruto - $totalDisc + $totalPajak;
 
+            // Ambil nama pengguna dari request
+            $pengguna = $request->pengguna ?? Auth::user()->name ?? 'System';
+
             // Buat header Penjualan
-            $jualan = Penjualan::create([
-                'no_jualan' => $this->generateJualanNumber(),
-                'customer_order_id' => $request->customer_order_id,
-                'pelanggan_id' => $request->pelanggan_id,
-                'tgl_kirim' => $request->tgl_kirim,
-                'jatuh_tempo' => $request->jatuh_tempo,
-                'po_pelanggan' => $customerOrder->po_pelanggan,
-                'bruto' => $bruto,
-                'total_disc' => $totalDisc,
-                'total_pajak' => $totalPajak,
-                'netto' => $netto,
-                'pengguna' => Auth::user()->name,
-                'status' => 'Draft',
-            ]);
-            
-            // Simpan detail dan kurangi stok
+            $jualan = new Penjualan();
+            $jualan->no_jualan = $this->generateJualanNumber();
+            $jualan->customer_order_id = $request->customer_order_id;
+            $jualan->pelanggan_id = $request->pelanggan_id;
+            $jualan->tgl_kirim = $request->tgl_kirim;
+            $jualan->jatuh_tempo = $request->jatuh_tempo;
+            $jualan->po_pelanggan = $customerOrder->po_pelanggan;
+            $jualan->bruto = $bruto;
+            $jualan->total_disc = $totalDisc;
+            $jualan->total_pajak = $totalPajak;
+            $jualan->netto = $netto;
+            $jualan->pengguna = $pengguna;
+            $jualan->status = 'Draft'; // Status awal adalah Draft
+            $jualan->save();
+
+            // Simpan detail tanpa mengurangi stok
             foreach ($request->items as $coDetailId => $itemData) {
                 if (isset($coDetailsMap[$coDetailId])) {
                     $detail = $coDetailsMap[$coDetailId];
                     $qtyJual = (float)$itemData['qty'];
 
-                    // --- LOGIKA PENGURANGAN STOK DIMULAI DI SINI ---
-                    $product = Product::find($detail->product_id);
-
-                    if (!$product) {
-                        throw new Exception("Produk dengan ID {$detail->product_id} tidak ditemukan.");
-                    }
-
-                    // Periksa apakah stok mencukupi
-                    if ($product->stok < $qtyJual) {
-                        // Jika tidak cukup, batalkan transaksi
-                        throw new Exception("Stok untuk produk '{$product->nama}' tidak mencukupi. Sisa stok: {$product->stok}.");
-                    }
-
-                    // Kurangi stok dan simpan
-                    $product->stok -= $qtyJual;
-                    $product->save();
-                    // --- LOGIKA PENGURANGAN STOK SELESAI ---
-
+                    // Hanya simpan detail tanpa mengurangi stok
                     PenjualanDetail::create([
                         'penjualan_id' => $jualan->id,
                         'product_id' => $detail->product_id,
                         'qty' => $qtyJual,
-                        'satuan' => $detail->satuan,
+                        'satuan' => 'pcs',
                         'harga' => $detail->harga,
                         'disc' => $itemData['disc'],
                         'pajak' => $itemData['pajak'],
@@ -123,18 +110,18 @@ class PenjualanController extends Controller
                     ]);
                 }
             }
-            
+
             DB::commit(); // Jika semua berhasil, simpan perubahan ke database
 
             return response()->json(['message' => 'Data Penjualan berhasil disimpan dengan No: ' . $jualan->no_jualan]);
 
         } catch (Exception $e) {
-            DB::rollBack(); // Jika ada error (misal: stok tidak cukup), batalkan semua operasi
+            DB::rollBack(); // Jika ada error, batalkan semua operasi
             // Kirim pesan error yang jelas ke pengguna
             return response()->json(['message' => 'Terjadi kesalahan: ' . $e->getMessage()], 500);
         }
     }
-    
+
     // --- API METHODS ---
 
     public function getOutstandingOrders(Pelanggan $pelanggan)
@@ -142,10 +129,10 @@ class PenjualanController extends Controller
         $orders = CustomerOrder::where('pelanggan_id', $pelanggan->id)
             ->where('status', '!=', 'Selesai')
             ->get(['id', 'no_order', 'po_pelanggan']);
-            
+
         return response()->json($orders);
     }
-    
+
     public function getOrderDetails(CustomerOrder $customerOrder)
     {
         $details = $customerOrder->details()->with('product')->get();
@@ -161,5 +148,62 @@ class PenjualanController extends Controller
         $last = Penjualan::where('no_jualan', 'like', $prefix . '%')->latest('id')->first();
         $sequence = $last ? (int) substr($last->no_jualan, -4) + 1 : 1;
         return $prefix . str_pad($sequence, 4, '0', STR_PAD_LEFT);
+    }
+
+    /**
+ * Approve penjualan dan kurangi stok
+ */
+    public function approve($id)
+    {
+        // Gunakan transaksi database
+        DB::beginTransaction();
+        try {
+            $jualan = Penjualan::with('details.product')->findOrFail($id);
+
+            // Pastikan status masih Draft
+            if ($jualan->status !== 'Draft') {
+                return response()->json(['message' => 'Penjualan sudah di-approve atau dibatalkan'], 400);
+            }
+
+            // Periksa stok untuk setiap item
+            foreach ($jualan->details as $detail) {
+                $product = $detail->product;
+                if (!$product) {
+                    throw new Exception("Produk dengan ID {$detail->product_id} tidak ditemukan.");
+                }
+
+                if ($product->qty < $detail->qty) {
+                    throw new Exception("Stok untuk produk '{$product->nama_produk}' tidak mencukupi. Sisa stok: {$product->qty}, Dibutuhkan: {$detail->qty}.");
+                }
+            }
+
+            // Kurangi stok untuk setiap item
+            foreach ($jualan->details as $detail) {
+                $product = $detail->product;
+                $product->qty -= $detail->qty;
+                $product->save();
+            }
+
+            // Update status penjualan
+            $jualan->status = 'Approved';
+            $jualan->approved_by = Auth::user()->name;
+            $jualan->approved_at = now();
+            $jualan->save();
+
+            DB::commit();
+
+            return response()->json(['message' => 'Penjualan berhasil di-approve dan stok telah dikurangi']);
+
+        } catch (Exception $e) {
+            DB::rollBack();
+            return response()->json(['message' => 'Terjadi kesalahan: ' . $e->getMessage()], 500);
+        }
+    }
+
+    public function show($id)
+    {
+        $jualan = Penjualan::with(['pelanggan', 'customerOrder', 'details.product'])->findOrFail($id);
+
+        return view('SistemPenjualan.PenjualanDetail', compact('jualan'));
     }
 }
