@@ -423,14 +423,13 @@ Route::middleware(['auth', 'can.access.menu'])->group(function () {
     Route::resource('pelanggan', PelangganController::class);
     Route::resource('customer-orders', DaftarPesananController::class);
     Route::resource('penjualan', PenjualanController::class)->only(['index', 'store']);
-    Route::get('/customer-orders/{id}/details', [\App\Http\Controllers\ControllerSP\DaftarPesananController::class, 'getOrderDetails']);
     Route::post('penjualan/{id}/approve', [\App\Http\Controllers\ControllerSP\PenjualanController::class, 'approve'])->name('penjualan.approve');
     Route::get('penjualan/{id}', [\App\Http\Controllers\ControllerSP\PenjualanController::class, 'show'])->name('penjualan.show');
 
         Route::prefix('api')->name('api.')->group(function () {
+            Route::get('/customer-orders/{id}/details', [\App\Http\Controllers\ControllerSP\DaftarPesananController::class, 'getOrderDetails']);
         Route::prefix('jualan')->name('jualan.')->group(function () {
             Route::get('/outstanding-orders/{pelanggan}', [PenjualanController::class, 'getOutstandingOrders'])->name('outstanding-orders');
-
             // Route to get the details of a specific customer order
             Route::get('/order-details/{customerOrder}', [PenjualanController::class, 'getOrderDetails'])->name('order-details');
         });
