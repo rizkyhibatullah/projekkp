@@ -157,7 +157,7 @@
                                                     <th class="text-center">Satuan</th>
                                                     <th class="text-right">Harga</th>
                                                     <th class="text-center">Disc(%)</th>
-                                                    <th class="text-right">Pajak</th>
+                                                    <th class="text-center">Pajak (%)</th>
                                                     <th class="text-right">Nominal</th>
                                                     <th>Catatan</th>
                                                 </tr>
@@ -171,7 +171,7 @@
                                                     <td class="text-center">{{ $detail->satuan ?? 'pcs' }}</td>
                                                     <td class="text-right">Rp{{ number_format($detail->harga, 0, ',', '.') }}</td>
                                                     <td class="text-center">{{ $detail->disc ?? 0 }}</td>
-                                                    <td class="text-right">Rp{{ number_format($detail->pajak, 0, ',', '.') }}</td>
+                                                    <td class="text-center">{{ $detail->pajak ?? 0 }}%</td>
                                                     <td class="text-right">Rp{{ number_format($detail->nominal, 0, ',', '.') }}</td>
                                                     <td>{{ $detail->catatan ?? '-' }}</td>
                                                 </tr>

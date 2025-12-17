@@ -48,7 +48,6 @@ class PenjualanController extends Controller
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
-        // Gunakan transaksi database untuk memastikan semua operasi berhasil atau gagal bersamaan
         DB::beginTransaction();
         try {
             $customerOrder = CustomerOrder::with('details.product')->find($request->customer_order_id);
@@ -57,21 +56,26 @@ class PenjualanController extends Controller
             }
             $coDetailsMap = $customerOrder->details->keyBy('id');
 
-            // Kalkulasi total
+            // Kalkulasi total (PERBAIKAN)
             $bruto = 0;
             $totalDisc = 0;
             $totalPajak = 0;
             foreach ($request->items as $coDetailId => $itemData) {
                 if (!isset($coDetailsMap[$coDetailId])) continue;
                 $detail = $coDetailsMap[$coDetailId];
+
                 $hargaTotalItem = (float)$itemData['qty'] * (float)$detail->harga;
                 $bruto += $hargaTotalItem;
-                $totalDisc += $hargaTotalItem * ((float)$itemData['disc'] / 100);
-                $totalPajak += (float)$itemData['pajak'];
+
+                $discAmount = $hargaTotalItem * ((float)$itemData['disc'] / 100);
+                $totalDisc += $discAmount;
+
+                $subtotalAfterDiscount = $hargaTotalItem - $discAmount;
+                $taxAmount = $subtotalAfterDiscount * ((float)$itemData['pajak'] / 100);
+                $totalPajak += $taxAmount;
             }
             $netto = $bruto - $totalDisc + $totalPajak;
 
-            // Ambil nama pengguna dari request
             $pengguna = $request->pengguna ?? Auth::user()->name ?? 'System';
 
             // Buat header Penjualan
@@ -87,16 +91,21 @@ class PenjualanController extends Controller
             $jualan->total_pajak = $totalPajak;
             $jualan->netto = $netto;
             $jualan->pengguna = $pengguna;
-            $jualan->status = 'Draft'; // Status awal adalah Draft
+            $jualan->status = 'Draft';
             $jualan->save();
 
-            // Simpan detail tanpa mengurangi stok
+            // Simpan detail dengan perhitungan nominal yang benar (PERBAIKAN)
             foreach ($request->items as $coDetailId => $itemData) {
                 if (isset($coDetailsMap[$coDetailId])) {
                     $detail = $coDetailsMap[$coDetailId];
                     $qtyJual = (float)$itemData['qty'];
 
-                    // Hanya simpan detail tanpa mengurangi stok
+                    $hargaTotalItem = $qtyJual * (float)$detail->harga;
+                    $discAmount = $hargaTotalItem * ((float)$itemData['disc'] / 100);
+                    $subtotalAfterDiscount = $hargaTotalItem - $discAmount;
+                    $taxAmount = $subtotalAfterDiscount * ((float)$itemData['pajak'] / 100);
+                    $finalNominal = $subtotalAfterDiscount + $taxAmount;
+
                     PenjualanDetail::create([
                         'penjualan_id' => $jualan->id,
                         'product_id' => $detail->product_id,
@@ -105,19 +114,18 @@ class PenjualanController extends Controller
                         'harga' => $detail->harga,
                         'disc' => $itemData['disc'],
                         'pajak' => $itemData['pajak'],
-                        'nominal' => (float)$itemData['qty'] * (float)$detail->harga,
+                        'nominal' => $finalNominal, // PERBAIKAN: Gunakan nominal akhir
                         'catatan' => $itemData['catatan'],
                     ]);
                 }
             }
 
-            DB::commit(); // Jika semua berhasil, simpan perubahan ke database
+            DB::commit();
 
             return response()->json(['message' => 'Data Penjualan berhasil disimpan dengan No: ' . $jualan->no_jualan]);
 
         } catch (Exception $e) {
-            DB::rollBack(); // Jika ada error, batalkan semua operasi
-            // Kirim pesan error yang jelas ke pengguna
+            DB::rollBack();
             return response()->json(['message' => 'Terjadi kesalahan: ' . $e->getMessage()], 500);
         }
     }
@@ -128,7 +136,7 @@ class PenjualanController extends Controller
     {
         $orders = CustomerOrder::where('pelanggan_id', $pelanggan->id)
             ->where('status', '!=', 'Selesai')
-            ->get(['id', 'no_order', 'po_pelanggan']);
+            ->get(['id', 'no_order', 'po_pelanggan', 'disc', 'pajak']);
 
         return response()->json($orders);
     }
@@ -205,5 +213,24 @@ class PenjualanController extends Controller
         $jualan = Penjualan::with(['pelanggan', 'customerOrder', 'details.product'])->findOrFail($id);
 
         return view('SistemPenjualan.PenjualanDetail', compact('jualan'));
+    }
+
+    public function destroy(Penjualan $penjualan)
+    {
+        // Pastikan hanya penjualan dengan status 'Draft' yang dapat dihapus
+        if ($penjualan->status !== 'Draft') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Hanya penjualan dengan status Draft yang dapat dihapus.'
+            ], 403); // 403 Forbidden
+        }
+
+        $no_jualan = $penjualan->no_jualan;
+        $penjualan->delete(); // Ini akan menghapus penjualan dan detailnya (jika relasi diatur dengan cascade on delete)
+
+        return response()->json([
+            'success' => true,
+            'message' => "Penjualan {$no_jualan} berhasil dihapus."
+        ]);
     }
 }

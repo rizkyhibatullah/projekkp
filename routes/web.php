@@ -425,6 +425,7 @@ Route::middleware(['auth', 'can.access.menu'])->group(function () {
     Route::resource('penjualan', PenjualanController::class)->only(['index', 'store']);
     Route::post('penjualan/{id}/approve', [\App\Http\Controllers\ControllerSP\PenjualanController::class, 'approve'])->name('penjualan.approve');
     Route::get('penjualan/{id}', [\App\Http\Controllers\ControllerSP\PenjualanController::class, 'show'])->name('penjualan.show');
+    Route::delete('penjualan/{penjualan}', [PenjualanController::class, 'destroy'])->name('penjualan.destroy');
 
         Route::prefix('api')->name('api.')->group(function () {
             Route::get('/customer-orders/{id}/details', [\App\Http\Controllers\ControllerSP\DaftarPesananController::class, 'getOrderDetails']);

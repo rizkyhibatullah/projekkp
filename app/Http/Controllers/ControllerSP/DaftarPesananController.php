@@ -45,25 +45,24 @@ class DaftarPesananController extends Controller
      * @return \Illuminate\Http\JsonResponse
      */
     public function store(Request $request)
-
     {
-        // Validasi input termasuk detail item
+        // PERBAIKAN: Hapus validasi items.*.disc dan items.*.pajak
         $validated = $request->validate([
             'pelanggan_id' => 'required|exists:daftarpelanggan,id',
             'po_pelanggan' => 'nullable|string|max:255',
             'tgl_kirim' => 'nullable|date',
             'bruto' => 'required|numeric|min:0',
             'disc' => 'nullable|numeric|min:0|max:100',
-            'pajak' => 'nullable|numeric|min:0',
+            'pajak' => 'nullable|numeric|min:0|max:100',
             'netto' => 'required|numeric|min:0',
             'tanggal_pesan' => 'required|date',
             'status' => 'nullable|in:Draft,Dikirim,Selesai,Batal',
-            'items' => 'required|array|min:1', // Tambahkan validasi untuk items
-            'items.*.product_id' => 'required|exists:dataproduk_tabel,id', // Validasi untuk setiap item
+            'items' => 'required|array|min:1',
+            'items.*.product_id' => 'required|exists:dataproduk_tabel,id',
             'items.*.qty' => 'required|numeric|min:0.01',
             'items.*.harga' => 'required|numeric|min:0',
-            'items.*.disc' => 'nullable|numeric|min:0|max:100',
-            'items.*.pajak' => 'nullable|numeric|min:0',
+            // 'items.*.disc' => 'nullable|numeric|min:0|max:100', // <-- HAPUS BARIS INI
+            // 'items.*.pajak' => 'nullable|numeric|min:0',      // <-- HAPUS BARIS INI
             'items.*.catatan' => 'nullable|string|max:255',
         ]);
 
@@ -80,49 +79,50 @@ class DaftarPesananController extends Controller
         $validated['no_order'] = $no_order;
         $validated['pengguna'] = Auth::user()->name;
 
-        // Gunakan transaksi database untuk memastikan semua operasi berhasil atau gagal bersamaan
         DB::beginTransaction();
         try {
             // Buat header Customer Order
             $order = CustomerOrder::create($validated);
 
+            // Ambil nilai diskon dan pajak global
+            $globalDiscPercent = $validated['disc'] ?? 0;
+            $globalPajakPercent = $validated['pajak'] ?? 0;
+
             // Simpan detail items
             foreach ($validated['items'] as $item) {
-                // Hitung nominal
                 $qty = (float)$item['qty'];
                 $harga = (float)$item['harga'];
-                $discPercent = (float)($item['disc'] ?? 0);
-                $pajak = (float)($item['pajak'] ?? 0);
 
-                $total = $qty * $harga;
-                $discAmount = $total * ($discPercent / 100);
-                $nominal = $total - $discAmount + $pajak;
+                $totalHarga = $qty * $harga;
+                $discAmount = $totalHarga * ($globalDiscPercent / 100);
+                $subtotalAfterDiscount = $totalHarga - $discAmount;
+                $taxAmount = $subtotalAfterDiscount * ($globalPajakPercent / 100);
+
+                $nominal = $subtotalAfterDiscount + $taxAmount;
 
                 CustomerOrderDetail::create([
                     'customer_order_id' => $order->id,
                     'product_id' => $item['product_id'],
                     'qty' => $item['qty'],
-                    'satuan' => 'pcs', // Default ke 'pcs' karena tidak ada field satuan di Dtproduk
+                    'satuan' => 'pcs',
                     'harga' => $item['harga'],
-                    'disc' => $item['disc'] ?? 0,
-                    'pajak' => $item['pajak'] ?? 0,
-                    'nominal' => $nominal, // Tambahkan field nominal
+                    'disc' => $globalDiscPercent, // Simpan nilai global
+                    'pajak' => $globalPajakPercent, // Simpan nilai global
+                    'nominal' => $nominal,
                     'catatan' => $item['catatan'] ?? '',
                 ]);
             }
 
-            DB::commit(); // Jika semua berhasil, simpan perubahan ke database
+            DB::commit();
 
-            // Return a success response with the created data.
             return response()->json([
                 'success' => true,
                 'message' => 'Pesanan pelanggan berhasil ditambahkan.',
                 'data' => $order
             ]);
         } catch (\Exception $e) {
-            DB::rollBack(); // Jika ada error, batalkan semua operasi
+            DB::rollBack();
 
-            // Return error response
             return response()->json([
                 'success' => false,
                 'message' => 'Terjadi kesalahan: ' . $e->getMessage(),
@@ -139,14 +139,14 @@ class DaftarPesananController extends Controller
      */
     public function update(Request $request, CustomerOrder $customer_order)
     {
-        // Validasi input
+        // PERBAIKAN: Hapus validasi items.*.disc dan items.*.pajak
         $validated = $request->validate([
             'pelanggan_id' => 'required|exists:daftarpelanggan,id',
             'po_pelanggan' => 'nullable|string|max:255',
             'tgl_kirim' => 'nullable|date',
             'bruto' => 'required|numeric|min:0',
             'disc' => 'nullable|numeric|min:0|max:100',
-            'pajak' => 'nullable|numeric|min:0',
+            'pajak' => 'nullable|numeric|min:0|max:100',
             'netto' => 'required|numeric|min:0',
             'tanggal_pesan' => 'required|date',
             'status' => 'nullable|in:Draft,Dikirim,Selesai,Batal',
@@ -154,8 +154,8 @@ class DaftarPesananController extends Controller
             'items.*.product_id' => 'required|exists:dataproduk_tabel,id',
             'items.*.qty' => 'required|numeric|min:0.01',
             'items.*.harga' => 'required|numeric|min:0',
-            'items.*.disc' => 'nullable|numeric|min:0|max:100',
-            'items.*.pajak' => 'nullable|numeric|min:0',
+            // 'items.*.disc' => 'nullable|numeric|min:0|max:100', // <-- HAPUS BARIS INI
+            // 'items.*.pajak' => 'nullable|numeric|min:0',      // <-- HAPUS BARIS INI
             'items.*.catatan' => 'nullable|string|max:255',
         ]);
 
@@ -169,29 +169,32 @@ class DaftarPesananController extends Controller
             // Hapus semua detail lama
             $customer_order->details()->delete();
 
+            // Ambil nilai diskon dan pajak global
+            $globalDiscPercent = $validated['disc'] ?? 0;
+            $globalPajakPercent = $validated['pajak'] ?? 0;
+
             // Simpan ulang semua item
             foreach ($validated['items'] as $item) {
                 $qty = (float)$item['qty'];
                 $harga = (float)$item['harga'];
-                $discPercent = (float)($item['disc'] ?? 0);
-                $pajak = (float)($item['pajak'] ?? 0);
 
-                $total = $qty * $harga;
-                $discAmount = $total * ($discPercent / 100);
-                $nominal = $total - $discAmount + $pajak;
+                $totalHarga = $qty * $harga;
+                $discAmount = $totalHarga * ($globalDiscPercent / 100);
+                $subtotalAfterDiscount = $totalHarga - $discAmount;
+                $taxAmount = $subtotalAfterDiscount * ($globalPajakPercent / 100);
+
+                $nominal = $subtotalAfterDiscount + $taxAmount;
 
                 CustomerOrderDetail::create([
                     'customer_order_id' => $customer_order->id,
                     'product_id' => $item['product_id'],
                     'qty' => $item['qty'],
-                    'satuan' => 'pcs', // Default
+                    'satuan' => 'pcs',
                     'harga' => $item['harga'],
-                    'disc' => $item['disc'] ?? 0,
-                    'pajak' => $item['pajak'] ?? 0,
+                    'disc' => $globalDiscPercent, // Simpan nilai global
+                    'pajak' => $globalPajakPercent, // Simpan nilai global
                     'nominal' => $nominal,
                     'catatan' => $item['catatan'] ?? '',
-                    // Jika Anda tambahkan gudang_id:
-                    // 'gudang_id' => $item['gudang_id'] ?? null,
                 ]);
             }
 
