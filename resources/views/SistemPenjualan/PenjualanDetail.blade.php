@@ -225,9 +225,6 @@
                                     <div class="alert alert-warning">
                                         <i class="fas fa-exclamation-triangle"></i> Penjualan ini belum di-approve. Stok barang akan dikurangi setelah penjualan di-approve.
                                     </div>
-                                    <button class="btn btn-success btn-block" id="approveBtn" data-id="{{ $jualan->id }}" data-no_jualan="{{ $jualan->no_jualan }}">
-                                        <i class="fas fa-check"></i> Approve Penjualan
-                                    </button>
                                 </div>
                             </div>
                             @endif

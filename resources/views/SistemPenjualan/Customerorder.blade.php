@@ -136,8 +136,8 @@
                             </div>
                             <div class="form-group">
                                 <label>No# Order</label>
-                                <input type="text" id="no_order" name="no_order" class="form-control" value="AUTO"
-                                    readonly>
+                                <input type="text" id="no_order" name="no_order" class="form-control"
+                                    value="AUTO" readonly>
                             </div>
                             <div class="form-group">
                                 <label>PO Pelanggan</label>
@@ -217,7 +217,8 @@
                                         </select>
                                     </td>
                                     <td>
-                                        <input type="text" class="form-control gudang-display" readonly placeholder="Pilih produk">
+                                        <input type="text" class="form-control gudang-display" readonly
+                                            placeholder="Pilih produk">
                                         <input type="hidden" name="items[0][gudang_id]" class="gudang-id-input">
                                     </td>
                                     <td><input type="number" name="items[0][qty]" class="form-control item-qty"
@@ -251,7 +252,10 @@
 @push('scripts')
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
-        $(function () {
+        $(function() {
+            $(document).on('click', '[data-dismiss="modal"]', function() {
+                $(this).closest('.modal').modal('hide');
+            });
             const storeUrl = "{{ route('customer-orders.store') }}";
             const updateUrlTpl = "{{ route('customer-orders.update', ':id') }}";
             const deleteUrlTpl = "{{ route('customer-orders.destroy', ':id') }}";
@@ -280,7 +284,7 @@
             function calculateTotals() {
                 let bruto = 0;
 
-                $('#itemsTable tbody tr').each(function () {
+                $('#itemsTable tbody tr').each(function() {
                     const qty = parseFloat($(this).find('.item-qty').val()) || 0;
                     const harga = parseFloat($(this).find('.item-harga').val()) || 0;
                     bruto += qty * harga;
@@ -303,7 +307,7 @@
             }
 
             // Pilih pelanggan → isi alamat & diskon
-            $('#pelanggan_id').on('change', function () {
+            $('#pelanggan_id').on('change', function() {
                 const selectedOption = $(this).find('option:selected');
                 const alamat = selectedOption.data('alamat') || '';
                 const potongan = parseFloat(selectedOption.data('potongan')) || 0;
@@ -314,7 +318,7 @@
             });
 
             // Pilih produk → isi harga & gudang
-            $(document).on('change', '.product-select', function () {
+            $(document).on('change', '.product-select', function() {
                 const row = $(this).closest('tr');
                 const selectedOption = $(this).find('option:selected');
 
@@ -331,18 +335,18 @@
             });
 
             // Input qty/harga → update
-            $(document).on('input', '.item-qty, .item-harga', function () {
+            $(document).on('input', '.item-qty, .item-harga', function() {
                 calculateItemSubtotal($(this).closest('tr'));
                 calculateTotals();
             });
 
             // Input pajak global → update netto
-            $('#pajak').on('input', function () {
+            $('#pajak').on('input', function() {
                 calculateTotals();
             });
 
             // Tambah item
-            $('#addItem').click(function () {
+            $('#addItem').click(function() {
                 let newRow = `
                     <tr>
                         <td>
@@ -373,7 +377,7 @@
             });
 
             // Hapus item
-            $(document).on('click', '.remove-item', function () {
+            $(document).on('click', '.remove-item', function() {
                 if ($('#itemsTable tbody tr').length > 1) {
                     $(this).closest('tr').remove();
                     calculateTotals();
@@ -383,7 +387,7 @@
             });
 
             // Tambah baru
-            $('#btnAddCustomerOrder').click(function () {
+            $('#btnAddCustomerOrder').click(function() {
                 form.trigger('reset');
                 $('#modalTitle').text('Tambah Pesanan Pelanggan Baru');
                 $('#modalSubmit').text('Simpan');
@@ -425,7 +429,7 @@
             });
 
             // Edit
-            $('#dataTable').on('click', '.edit-btn', function () {
+            $('#dataTable').on('click', '.edit-btn', function() {
                 let btn = $(this);
                 let id = btn.data('id');
 
@@ -451,15 +455,16 @@
                 $.ajax({
                     url: `/api/customer-orders/${id}/details`,
                     method: 'GET',
-                    success: function (response) {
+                    success: function(response) {
                         if (response.details && response.details.length > 0) {
                             let itemsHtml = '';
                             response.details.forEach((item, index) => {
                                 let gudangNama = '–';
                                 let gudangId = '';
-                                @foreach($dataproduks as $dp)
+                                @foreach ($dataproduks as $dp)
                                     if (item.product_id == {{ $dp->id }}) {
-                                        gudangNama = "{{ optional($dp->warehouse)->WARE_Name ?: '–' }}";
+                                        gudangNama =
+                                            "{{ optional($dp->warehouse)->WARE_Name ?: '–' }}";
                                         gudangId = "{{ $dp->WARE_Auto }}";
                                     }
                                 @endforeach
@@ -489,7 +494,7 @@
                             $('#itemsTable tbody').html(itemsHtml);
                             itemCount = response.details.length;
 
-                            $('#itemsTable tbody tr').each(function () {
+                            $('#itemsTable tbody tr').each(function() {
                                 calculateItemSubtotal($(this));
                             });
                             calculateTotals();
@@ -519,7 +524,7 @@
                             calculateTotals();
                         }
                     },
-                    error: function () {
+                    error: function() {
                         $('#itemsTable tbody').html(`
                             <tr>
                                 <td>
@@ -549,11 +554,11 @@
             });
 
             // Submit
-            form.on('submit', function (e) {
+            form.on('submit', function(e) {
                 e.preventDefault();
 
                 let hasItems = false;
-                $('#itemsTable tbody tr').each(function () {
+                $('#itemsTable tbody tr').each(function() {
                     if ($(this).find('.product-select').val()) {
                         hasItems = true;
                         return false;
@@ -567,13 +572,14 @@
 
                 const submitBtn = $('#modalSubmit');
                 const originalBtnText = submitBtn.html();
-                submitBtn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm"></span> Menyimpan...');
+                submitBtn.prop('disabled', true).html(
+                    '<span class="spinner-border spinner-border-sm"></span> Menyimpan...');
 
                 $.ajax({
                     url: form.attr('action'),
                     method: 'POST',
                     data: form.serialize(),
-                    success: function (response) {
+                    success: function(response) {
                         modal.modal('hide');
                         Swal.fire({
                             icon: 'success',
@@ -583,7 +589,7 @@
                             showConfirmButton: false
                         }).then(() => location.reload());
                     },
-                    error: function (xhr) {
+                    error: function(xhr) {
                         let errorMessage = 'Terjadi kesalahan pada server.';
                         if (xhr.status === 422) {
                             let errors = xhr.responseJSON.errors;
@@ -591,16 +597,20 @@
                         } else if (xhr.responseJSON?.message) {
                             errorMessage = xhr.responseJSON.message;
                         }
-                        Swal.fire({ icon: 'error', title: 'Error', html: errorMessage });
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            html: errorMessage
+                        });
                     },
-                    complete: function () {
+                    complete: function() {
                         submitBtn.prop('disabled', false).html(originalBtnText);
                     }
                 });
             });
 
             // Hapus
-            $('#dataTable').on('click', '.delete-btn', function () {
+            $('#dataTable').on('click', '.delete-btn', function() {
                 let id = $(this).data('id');
                 let noOrder = $(this).data('no_order');
 
@@ -621,11 +631,13 @@
                                 '_method': 'DELETE',
                                 '_token': csrfToken
                             },
-                            success: function (response) {
-                                Swal.fire('Terhapus!', response.message, 'success').then(() => location.reload());
+                            success: function(response) {
+                                Swal.fire('Terhapus!', response.message, 'success')
+                                    .then(() => location.reload());
                             },
-                            error: function (xhr) {
-                                Swal.fire('Error', xhr.responseJSON?.message || 'Gagal menghapus pesanan.', 'error');
+                            error: function(xhr) {
+                                Swal.fire('Error', xhr.responseJSON?.message ||
+                                    'Gagal menghapus pesanan.', 'error');
                             }
                         });
                     }

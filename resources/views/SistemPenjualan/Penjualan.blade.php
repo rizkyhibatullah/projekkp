@@ -249,6 +249,11 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         $(document).ready(function() {
+            $(document).on('click', '[data-dismiss="modal"]', function(e) {
+                e.preventDefault();
+                $(this).closest('.modal').modal('hide');
+            });
+
             // --- Config ---
             const modal = $('#jualanModal');
             const form = $('#formJualan');

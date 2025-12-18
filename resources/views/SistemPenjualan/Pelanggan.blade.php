@@ -18,9 +18,9 @@
     <div class="mb-3">
         @php
         $currentRouteName = Route::currentRouteName();
-        $currentMenuSlug = Str::beforeLast($currentRouteName, '.'); 
+        $currentMenuSlug = Str::beforeLast($currentRouteName, '.');
         @endphp
-        @can('tambah', $currentMenuSlug) 
+        @can('tambah', $currentMenuSlug)
         <button type="button" class="btn btn-primary" id="addPelangganButton">
             <i class="fas fa-plus fa-sm"></i> Tambah Pelanggan Baru
         </button>
@@ -76,7 +76,7 @@
                                         <i class="fas fa-edit"></i>
                                     </button>
                                     @endcan
-                                    @can('hapus', $currentMenuSlug)                            
+                                    @can('hapus', $currentMenuSlug)
                                     <button class="btn btn-sm btn-danger delete-btn"
                                         title="Hapus Pelanggan"
                                         data-id="{{ $pelanggan->id }}"
@@ -105,7 +105,7 @@
             <form id="pelangganForm" method="POST">
                 @csrf
                 <input type="hidden" name="_method" id="formMethod" value="POST">
-                
+
                 <div class="modal-header">
                     <h5 class="modal-title" id="pelangganModalLabel">Tambah Pelanggan Baru</h5>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
@@ -180,7 +180,10 @@
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
-$(function() {
+    $(function() {
+        $(document).on('click', '[data-dismiss="modal"]', function() {
+        $(this).closest('.modal').modal('hide');
+    });
     // --- Konfigurasi ---
     const storeUrl = "{{ route('pelanggan.store') }}";
     const updateUrlTpl = "{{ route('pelanggan.update', ':id') }}";
@@ -212,13 +215,13 @@ $(function() {
     $('#dataTable').on('click', '.edit-btn', function() {
         const btn = $(this);
         const id = btn.data('id');
-        
+
         form.trigger('reset');
         form.attr('action', updateUrlTpl.replace(':id', id));
         $('#formMethod').val('PUT');
         $('#pelangganModalLabel').text('Edit Data Pelanggan');
         $('#savePelangganButton').text('Simpan Perubahan');
-        
+
         // Isi form dari data-attributes
         $('#modal_kode').val(btn.data('kode'));
         $('#modal_anggota').val(btn.data('anggota'));
@@ -230,7 +233,7 @@ $(function() {
         $('#modal_potongan').val(btn.data('potongan'));
         $('#modal_nominal_plafon').val(btn.data('nominal_plafon'));
         $('#modal_status').val(btn.data('status'));
-        
+
         $('#form_group_kode').show();
         modal.modal('show');
     });
